@@ -602,7 +602,7 @@ typedef struct
 #define CRC                 ((CRC_TypeDef *) CRC_BASE)
 #define AES                 ((AES_TypeDef *) AES_BASE)
 
-#define GPIOA               ((GPIO_TypeDef *) GPIOA_BASE)
+#define MIN_UNID_GPIO_Port               ((GPIO_TypeDef *) GPIOA_BASE)
 #define GPIOB               ((GPIO_TypeDef *) GPIOB_BASE)
 #define GPIOC               ((GPIO_TypeDef *) GPIOC_BASE)
 #define GPIOH               ((GPIO_TypeDef *) GPIOH_BASE)

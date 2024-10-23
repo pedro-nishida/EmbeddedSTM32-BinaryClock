@@ -47,8 +47,8 @@ typedef struct {
 typedef enum {
     MODE_CONFIG_CLOCK,
     MODE_CONFIG_ALARM,
-    MODE_RUNNING
-} ClockMode;
+    MODE_RUNNING,
+} ConfigMode;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -88,6 +88,7 @@ void incrementAlarmHours_units();
 void incrementAlarmHours_decs();
 void saveAlarm();
 void updateRelogio();
+void tocarAlarme();
 void readButtons();
 /* USER CODE END PFP */
 
@@ -148,67 +149,67 @@ void saveAlarm() {
 }
 
 void updateRelogio(){
-	//captar currentTime
-	//algoritmo de sinal para o LED Driver
-	//enviar
+  // Implementar a lógica para atualizar o relógio com o RTC (RUNNING MODE)
+
+  // Implementar a lógica para atualizar o relógio sem atualizar o RTC (CONFIG MODE)
+}
+
+void tocarAlarme() {
+    // Implementar a lógica para tocar o alarme
+    // comparação
+    // horaAtual == alarmTime -> toca o buzzer
+      // saber como funciona o PWM do Buzzer e como puxar o valor do alarme na memória
+      // HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_SET);
+      // HAL_Delay(1000);
+
 }
 
 void readButtons() {
-    // Verifica o botão de modo
-    if (HAL_GPIO_ReadPin(GPIOA, SEL_MODE_Pin) == GPIO_PIN_SET) {
-        currentMode = MODE_CONFIG_ALARM; // Muda para o modo de configuração do alarme
-    } else {
-        currentMode = MODE_CONFIG_CLOCK; // Retorna ao modo de configuração do relógio
+  
+  uint1_t Config_Set = 0
+  Config_Set? ConfigMode.MODE_CONFIG_ALARM : ConfigMode.MODE_CONFIG_CLOCK;  // True : False
+  if (HAL_GPIO_ReadPin(GPIOA, SEL_MODE_Pin) == GPIO_PIN_SET) {
+    Config_Set = (Config_Set + 1) % 2;
+  } 
+  
+  if (ConfigMode == MODE_CONFIG_CLOCK) {
+    uint1_t confirm = 0;
+
+    while (!confirm) {
+      
+      if (HAL_GPIO_ReadPin(SEC_UNID_GPIO_Port, SEC_UNID_Pin) == GPIO_PIN_SET) { incrementSeconds_units(); }
+      if (HAL_GPIO_ReadPin(SEC_DEZ_GPIO_Port, SEC_DEZ_Pin) == GPIO_PIN_SET) { incrementSeconds_Tens(); }
+      if (HAL_GPIO_ReadPin(MIN_UNID_GPIO_Port, MIN_UNID_Pin) == GPIO_PIN_SET) { incrementMinutes_Units(); }
+      if (HAL_GPIO_ReadPin(MIN_DEZ_GPIO_Port, MIN_DEZ_Pin) == GPIO_PIN_SET) { incrementMinutes_Tens(); }
+      if (HAL_GPIO_ReadPin(HOUR_UNID_GPIO_Port, HOUR_UNID_Pin) == GPIO_PIN_SET) { incrementHours_Units(); }
+      if (HAL_GPIO_ReadPin(HOUR_UNID_GPIO_Port, HOUR_DEZ_Pin) == GPIO_PIN_SET) { incrementHours_Tens(); }
+      
+      //updateRelogio();
+        //Feedback para o usuário, mas Relógio não atualiza com RTC
+      
+      if (HAL_GPIO_ReadPin(GPIOA, CONFIRM_Pin) == GPIO_PIN_SET) {
+        confirm = 1;
+      } 
     }
+  } else if (ConfigMode == MODE_CONFIG_ALARM) {
+    uint1_t confirm = 0;
 
-    if (currentMode == MODE_CONFIG_CLOCK) {
-        // Configuração do relógio
-        if (HAL_GPIO_ReadPin(SEC_UNID_GPIO_Port, SEC_UNID_Pin) == GPIO_PIN_SET) {
-        	incrementSeconds_units(); // Incrementa a unidade dos segundos
-        }
-        if (HAL_GPIO_ReadPin(SEC_DEZ_GPIO_Port, SEC_DEZ_Pin) == GPIO_PIN_SET) {
-            incrementSeconds_Tens(); // Incrementa a dezena dos segundos
-        }
-        if (HAL_GPIO_ReadPin(MIN_UNID_GPIO_Port, MIN_UNID_Pin) == GPIO_PIN_SET) {
-            incrementMinutes_Units(); // Incrementa a unidade dos minutos
-        }
-        if (HAL_GPIO_ReadPin(MIN_DEZ_GPIO_Port, MIN_DEZ_Pin) == GPIO_PIN_SET) {
-            incrementMinutes_Tens(); // Incrementa a dezena dos minutos
-        }
-        if (HAL_GPIO_ReadPin(HOUR_UNID_GPIO_Port, HOUR_UNID_Pin) == GPIO_PIN_SET) {
-            incrementHours_Units(); // Incrementa a unidade das horas
-        }
-        if (HAL_GPIO_ReadPin(HOUR_UNID_GPIO_Port, HOUR_DEZ_Pin) == GPIO_PIN_SET) {
-            incrementHours_Tens(); // Incrementa a dezena das horas
-        }
+    while (!confirm) {
+      // Configuração do alarme
+      if (HAL_GPIO_ReadPin(MIN_UNID_GPIO_Port, MIN_UNID_Pin) == GPIO_PIN_SET) { incrementAlarmMinutes_units(); }
+      if (HAL_GPIO_ReadPin(MIN_DEZ_GPIO_Port, MIN_DEZ_Pin) == GPIO_PIN_SET) { incrementAlarmMinutes_Tens(); }
+      if (HAL_GPIO_ReadPin(HOUR_UNID_GPIO_Port, HOUR_UNID_Pin) == GPIO_PIN_SET) { incrementAlarmHours_Units(); }
+      if (HAL_GPIO_ReadPin(HOUR_DEZ_GPIO_Port, HOUR_DEZ_Pin) == GPIO_PIN_SET) { incrementAlarmHours_Tens(); }
 
-        // Verifica o botão de confirmação
-        if (HAL_GPIO_ReadPin(GPIOA, CONFIRM_Pin) == GPIO_PIN_SET) {
-            currentMode = MODE_RUNNING; // Muda para o modo de contagem
-        }
-    } else if (currentMode == MODE_CONFIG_ALARM) {
-        // Configuração do alarme
-        if (HAL_GPIO_ReadPin(MIN_UNID_GPIO_Port, ALARM_MIN_UNID_Pin) == GPIO_PIN_SET) {
-        	incrementAlarmMinutes_units(); // Incrementa a unidade dos minutos do alarme
-        }
-        if (HAL_GPIO_ReadPin(MIN_DEZ_GPIO_Port, ALARM_MIN_DEZ_Pin) == GPIO_PIN_SET) {
-            incrementAlarmMinutes_Tens(); // Incrementa a dezena dos minutos do alarme
-        }
-        if (HAL_GPIO_ReadPin(HOUR_UNID_GPIO_Port, ALARM_HOUR_UNID_Pin) == GPIO_PIN_SET) {
-            incrementAlarmHours_Units(); // Incrementa a unidade das horas do alarme
-        }
-        if (HAL_GPIO_ReadPin(HOUR_DEZ_GPIO_Port, ALARM_HOUR_DEZ_Pin) == GPIO_PIN_SET) {
-            incrementAlarmHours_Tens(); // Incrementa a dezena das horas do alarme
-        }
-
-        // Verifica o botão de confirmação do alarme
-        if (HAL_GPIO_ReadPin(GPIOA, CONFIRM_Pin) == GPIO_PIN_SET) {
-            saveAlarm(); // Salva o alarme
-            currentMode = MODE_RUNNING; // Muda para o modo de contagem
-        }
+      if (HAL_GPIO_ReadPin(CONFIRM_GPIO_Port, CONFIRM_Pin) == GPIO_PIN_SET) {
+        confirm = 1;
+        saveAlarm(); // Salva o alarme
+      } 
     }
+  }
+
+  currentMode = MODE_RUNNING;
 }
-
 
 /* USER CODE END 0 */
 
@@ -220,8 +221,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	Time currentTime = {0, 0, 0, 0, 0, 0}; // Inicializa com zero
-	ClockMode currentMode = MODE_RUNNING; // Inicializa no modo de configuração
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -230,7 +230,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+	Time currentTime = {0, 0, 0, 0, 0, 0}; // Inicializa com zero
+	ClockMode currentMode = MODE_RUNNING; // Inicializa no modo de configuração
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -255,7 +256,7 @@ int main(void)
 	  readButtons();
 
 	  if (currentMode == MODE_RUNNING) {
-		  updateClock();
+		  updateRelogio();
 	  }
     /* USER CODE END WHILE */
 
