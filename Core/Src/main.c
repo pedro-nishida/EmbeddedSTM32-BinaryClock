@@ -26,12 +26,34 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+typedef struct {
+    uint8_t seconds_units;
+    uint8_t seconds_tens;
+    uint8_t minutes_units;
+    uint8_t minutes_tens;
+    uint8_t hours_units;
+    uint8_t hours_tens;
+} alarmTime;
 
+typedef struct {
+    uint8_t seconds_units;
+    uint8_t seconds_tens;
+    uint8_t minutes_units;
+    uint8_t minutes_tens;
+    uint8_t hours_units;
+    uint8_t hours_tens;
+} Alarm;
+
+typedef enum {
+    MODE_CONFIG_CLOCK,
+    MODE_CONFIG_ALARM,
+    MODE_RUNNING
+} ClockMode;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define Clock_Frequency 32768;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -54,11 +76,139 @@ static void MX_GPIO_Init(void);
 static void MX_RTC_Init(void);
 static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
-
+void incrementSeconds_units();
+void incrementSeconds_decs();
+void incrementMinutes_units();
+void incrementMinutes_decs();
+void incrementHours_units();
+void incrementHours_decs();
+void incrementAlarmMinutes_units();
+void incrementAlarmMinutes_decs();
+void incrementAlarmHours_units();
+void incrementAlarmHours_decs();
+void saveAlarm();
+void updateRelogio();
+void readButtons();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+void incrementSeconds_units() {
+    currentTime.seconds_units = (currentTime.seconds_units + 1) % 10;
+}
+
+void incrementSeconds_decs() {
+    currentTime.seconds_decs = (currentTime.seconds_decs + 1) % 6;
+}
+
+void incrementMinutes_units() {
+    currentTime.minutes_units = (currentTime.minutes_units + 1) % 10;
+}
+
+void incrementMinutes_decs() {
+    currentTime.minutes_decs = (currentTime.minutes_decs + 1) % 6;
+}
+
+void incrementHours_units() {
+	if (currentTime.hours_decs == 2) {
+		currentTime.hours_units = (currentTime.hours_units + 1) % 5;
+	} else {
+		currentTime.hours_units = (currentTime.hours_units + 1) % 10;
+	}
+}
+
+void incrementHours_decs() {
+    currentTime.hours_decs = (currentTime.decs_units + 1) % 3;
+}
+
+void incrementAlarmMinutes_units() {
+	AlarmTime.minutes_units = (AlarmTime.minutes_units + 1) % 10;
+}
+
+void incrementAlarmMinutes_decs() {
+	AlarmTime.minutes_decs = (AlarmTime.minutes_decs + 1) % 6;
+}
+
+void incrementAlarmHours_units() {
+	if (AlarmTime.hours_decs == 2) {
+		AlarmTime.hours_units = (AlarmTime.hours_units + 1) % 5;
+	} else {
+		AlarmTime.hours_units = (AlarmTime.hours_units + 1) % 10;
+	}
+}
+
+void incrementAlarmHours_decs() {
+	AlarmTime.hours_decs = (AlarmTime.decs_units + 1) % 3;
+}
+
+void saveAlarm() {
+    // Implementar a lógica para salvar o alarme
+	// PROVAVELMENTE EEPROM
+}
+
+void updateRelogio(){
+	//captar currentTime
+	//algoritmo de sinal para o LED Driver
+	//enviar
+}
+
+void readButtons() {
+    // Verifica o botão de modo
+    if (HAL_GPIO_ReadPin(GPIOA, SEL_MODE_Pin) == GPIO_PIN_SET) {
+        currentMode = MODE_CONFIG_ALARM; // Muda para o modo de configuração do alarme
+    } else {
+        currentMode = MODE_CONFIG_CLOCK; // Retorna ao modo de configuração do relógio
+    }
+
+    if (currentMode == MODE_CONFIG_CLOCK) {
+        // Configuração do relógio
+        if (HAL_GPIO_ReadPin(SEC_UNID_GPIO_Port, SEC_UNID_Pin) == GPIO_PIN_SET) {
+        	incrementSeconds_units(); // Incrementa a unidade dos segundos
+        }
+        if (HAL_GPIO_ReadPin(SEC_DEZ_GPIO_Port, SEC_DEZ_Pin) == GPIO_PIN_SET) {
+            incrementSeconds_Tens(); // Incrementa a dezena dos segundos
+        }
+        if (HAL_GPIO_ReadPin(MIN_UNID_GPIO_Port, MIN_UNID_Pin) == GPIO_PIN_SET) {
+            incrementMinutes_Units(); // Incrementa a unidade dos minutos
+        }
+        if (HAL_GPIO_ReadPin(MIN_DEZ_GPIO_Port, MIN_DEZ_Pin) == GPIO_PIN_SET) {
+            incrementMinutes_Tens(); // Incrementa a dezena dos minutos
+        }
+        if (HAL_GPIO_ReadPin(HOUR_UNID_GPIO_Port, HOUR_UNID_Pin) == GPIO_PIN_SET) {
+            incrementHours_Units(); // Incrementa a unidade das horas
+        }
+        if (HAL_GPIO_ReadPin(HOUR_UNID_GPIO_Port, HOUR_DEZ_Pin) == GPIO_PIN_SET) {
+            incrementHours_Tens(); // Incrementa a dezena das horas
+        }
+
+        // Verifica o botão de confirmação
+        if (HAL_GPIO_ReadPin(GPIOA, CONFIRM_Pin) == GPIO_PIN_SET) {
+            currentMode = MODE_RUNNING; // Muda para o modo de contagem
+        }
+    } else if (currentMode == MODE_CONFIG_ALARM) {
+        // Configuração do alarme
+        if (HAL_GPIO_ReadPin(MIN_UNID_GPIO_Port, ALARM_MIN_UNID_Pin) == GPIO_PIN_SET) {
+        	incrementAlarmMinutes_units(); // Incrementa a unidade dos minutos do alarme
+        }
+        if (HAL_GPIO_ReadPin(MIN_DEZ_GPIO_Port, ALARM_MIN_DEZ_Pin) == GPIO_PIN_SET) {
+            incrementAlarmMinutes_Tens(); // Incrementa a dezena dos minutos do alarme
+        }
+        if (HAL_GPIO_ReadPin(HOUR_UNID_GPIO_Port, ALARM_HOUR_UNID_Pin) == GPIO_PIN_SET) {
+            incrementAlarmHours_Units(); // Incrementa a unidade das horas do alarme
+        }
+        if (HAL_GPIO_ReadPin(HOUR_DEZ_GPIO_Port, ALARM_HOUR_DEZ_Pin) == GPIO_PIN_SET) {
+            incrementAlarmHours_Tens(); // Incrementa a dezena das horas do alarme
+        }
+
+        // Verifica o botão de confirmação do alarme
+        if (HAL_GPIO_ReadPin(GPIOA, CONFIRM_Pin) == GPIO_PIN_SET) {
+            saveAlarm(); // Salva o alarme
+            currentMode = MODE_RUNNING; // Muda para o modo de contagem
+        }
+    }
+}
+
 
 /* USER CODE END 0 */
 
@@ -70,7 +220,8 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+	Time currentTime = {0, 0, 0, 0, 0, 0}; // Inicializa com zero
+	ClockMode currentMode = MODE_RUNNING; // Inicializa no modo de configuração
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -101,9 +252,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  readButtons();
+
+	  if (currentMode == MODE_RUNNING) {
+		  updateClock();
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
   }
   /* USER CODE END 3 */
 }
