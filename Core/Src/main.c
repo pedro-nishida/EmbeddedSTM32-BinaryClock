@@ -33,7 +33,7 @@ typedef struct {
     uint8_t minutes_tens;
     uint8_t hours_units;
     uint8_t hours_tens;
-} alarmTime;
+} TimeStruct;
 
 typedef struct {
     uint8_t seconds_units;
@@ -42,7 +42,7 @@ typedef struct {
     uint8_t minutes_tens;
     uint8_t hours_units;
     uint8_t hours_tens;
-} Alarm;
+} AlarmTimeStruct;
 
 typedef enum {
     MODE_CONFIG_CLOCK,
@@ -63,10 +63,12 @@ typedef enum {
 
 /* Private variables ---------------------------------------------------------*/
 RTC_HandleTypeDef hrtc;
-
 TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN PV */
+TimeStruct currentTime = {0, 0, 0, 0, 0, 0}; // Inicializa currentTime
+AlarmTimeStruct alarmTime = {0, 0, 0, 0, 0, 0};
+ConfigMode currentMode = MODE_RUNNING;
 
 /* USER CODE END PV */
 
@@ -99,53 +101,53 @@ void incrementSeconds_units() {
     currentTime.seconds_units = (currentTime.seconds_units + 1) % 10;
 }
 
-void incrementSeconds_decs() {
-    currentTime.seconds_decs = (currentTime.seconds_decs + 1) % 6;
+void incrementSeconds_tens() {
+    currentTime.seconds_tens = (currentTime.seconds_tens + 1) % 6;
 }
 
 void incrementMinutes_units() {
     currentTime.minutes_units = (currentTime.minutes_units + 1) % 10;
 }
 
-void incrementMinutes_decs() {
-    currentTime.minutes_decs = (currentTime.minutes_decs + 1) % 6;
+void incrementMinutes_tens() {
+    currentTime.minutes_tens = (currentTime.minutes_tens + 1) % 6;
 }
 
 void incrementHours_units() {
-	if (currentTime.hours_decs == 2) {
-		currentTime.hours_units = (currentTime.hours_units + 1) % 5;
+	if (currentTime.hours_tens == 2) {
+		currentTime.hours_units = (currentTime.hours_units + 1) % 4;  // Limite de 24 horas
 	} else {
 		currentTime.hours_units = (currentTime.hours_units + 1) % 10;
 	}
 }
 
-void incrementHours_decs() {
-    currentTime.hours_decs = (currentTime.decs_units + 1) % 3;
+void incrementHours_tens() {
+    currentTime.hours_tens = (currentTime.hours_tens + 1) % 3;  // Limite de 24 horas
 }
 
 void incrementAlarmMinutes_units() {
-	AlarmTime.minutes_units = (AlarmTime.minutes_units + 1) % 10;
+    alarmTime.minutes_units = (alarmTime.minutes_units + 1) % 10;
 }
 
-void incrementAlarmMinutes_decs() {
-	AlarmTime.minutes_decs = (AlarmTime.minutes_decs + 1) % 6;
+void incrementAlarmMinutes_tens() {
+    alarmTime.minutes_tens = (alarmTime.minutes_tens + 1) % 6;
 }
 
 void incrementAlarmHours_units() {
-	if (AlarmTime.hours_decs == 2) {
-		AlarmTime.hours_units = (AlarmTime.hours_units + 1) % 5;
-	} else {
-		AlarmTime.hours_units = (AlarmTime.hours_units + 1) % 10;
-	}
+    if (alarmTime.hours_tens == 2) {
+        alarmTime.hours_units = (alarmTime.hours_units + 1) % 4;  // Limite de 24 horas
+    } else {
+        alarmTime.hours_units = (alarmTime.hours_units + 1) % 10;
+    }
 }
 
-void incrementAlarmHours_decs() {
-	AlarmTime.hours_decs = (AlarmTime.decs_units + 1) % 3;
+void incrementAlarmHours_tens() {
+    alarmTime.hours_tens = (alarmTime.hours_tens + 1) % 3;  // Limite de 24 horas
 }
+
 
 void saveAlarm() {
     // Implementar a lógica para salvar o alarme
-	// PROVAVELMENTE EEPROM
 }
 
 void updateRelogio(){
@@ -155,61 +157,57 @@ void updateRelogio(){
 }
 
 void tocarAlarme() {
-    // Implementar a lógica para tocar o alarme
-    // comparação
-    // horaAtual == alarmTime -> toca o buzzer
-      // saber como funciona o PWM do Buzzer e como puxar o valor do alarme na memória
-      // HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_SET);
-      // HAL_Delay(1000);
+	if (currentTime.hours_tens == alarmTime.hours_tens && currentTime.hours_units == alarmTime.hours_units &&
+	    currentTime.minutes_tens == alarmTime.minutes_tens && currentTime.minutes_units == alarmTime.minutes_units) {
+	    HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_SET);
+	    HAL_Delay(1000);  // Alarm sound duration
+	    HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_RESET);
+	}
 
 }
 
 void readButtons() {
-  
-  uint1_t Config_Set = 0
-  Config_Set? ConfigMode.MODE_CONFIG_ALARM : ConfigMode.MODE_CONFIG_CLOCK;  // True : False
-  if (HAL_GPIO_ReadPin(GPIOA, SEL_MODE_Pin) == GPIO_PIN_SET) {
-    Config_Set = (Config_Set + 1) % 2;
-  } 
-  
-  if (ConfigMode == MODE_CONFIG_CLOCK) {
-    uint1_t confirm = 0;
+    uint8_t Config_Set = 0;
 
-    while (!confirm) {
-      
-      if (HAL_GPIO_ReadPin(SEC_UNID_GPIO_Port, SEC_UNID_Pin) == GPIO_PIN_SET) { incrementSeconds_units(); }
-      if (HAL_GPIO_ReadPin(SEC_DEZ_GPIO_Port, SEC_DEZ_Pin) == GPIO_PIN_SET) { incrementSeconds_Tens(); }
-      if (HAL_GPIO_ReadPin(MIN_UNID_GPIO_Port, MIN_UNID_Pin) == GPIO_PIN_SET) { incrementMinutes_Units(); }
-      if (HAL_GPIO_ReadPin(MIN_DEZ_GPIO_Port, MIN_DEZ_Pin) == GPIO_PIN_SET) { incrementMinutes_Tens(); }
-      if (HAL_GPIO_ReadPin(HOUR_UNID_GPIO_Port, HOUR_UNID_Pin) == GPIO_PIN_SET) { incrementHours_Units(); }
-      if (HAL_GPIO_ReadPin(HOUR_UNID_GPIO_Port, HOUR_DEZ_Pin) == GPIO_PIN_SET) { incrementHours_Tens(); }
-      
-      //updateRelogio();
-        //Feedback para o usuário, mas Relógio não atualiza com RTC
-      
-      if (HAL_GPIO_ReadPin(GPIOA, CONFIRM_Pin) == GPIO_PIN_SET) {
-        confirm = 1;
-      } 
+    if (HAL_GPIO_ReadPin(GPIOA, SEL_MODE_Pin) == GPIO_PIN_SET) {
+        Config_Set = (Config_Set + 1) % 2;
+        currentMode = Config_Set ? MODE_CONFIG_ALARM : MODE_CONFIG_CLOCK;
     }
-  } else if (ConfigMode == MODE_CONFIG_ALARM) {
-    uint1_t confirm = 0;
 
-    while (!confirm) {
-      // Configuração do alarme
-      if (HAL_GPIO_ReadPin(MIN_UNID_GPIO_Port, MIN_UNID_Pin) == GPIO_PIN_SET) { incrementAlarmMinutes_units(); }
-      if (HAL_GPIO_ReadPin(MIN_DEZ_GPIO_Port, MIN_DEZ_Pin) == GPIO_PIN_SET) { incrementAlarmMinutes_Tens(); }
-      if (HAL_GPIO_ReadPin(HOUR_UNID_GPIO_Port, HOUR_UNID_Pin) == GPIO_PIN_SET) { incrementAlarmHours_Units(); }
-      if (HAL_GPIO_ReadPin(HOUR_DEZ_GPIO_Port, HOUR_DEZ_Pin) == GPIO_PIN_SET) { incrementAlarmHours_Tens(); }
+    if (currentMode == MODE_CONFIG_CLOCK) {
+        uint8_t confirm = 0;
 
-      if (HAL_GPIO_ReadPin(CONFIRM_GPIO_Port, CONFIRM_Pin) == GPIO_PIN_SET) {
-        confirm = 1;
-        saveAlarm(); // Salva o alarme
-      } 
+        while (!confirm) {
+            if (HAL_GPIO_ReadPin(SEC_UNID_GPIO_Port, SEC_UNID_Pin) == GPIO_PIN_SET) { incrementSeconds_units(); }
+            if (HAL_GPIO_ReadPin(SEC_DEZ_GPIO_Port, SEC_DEZ_Pin) == GPIO_PIN_SET) { incrementSeconds_tens(); }
+            if (HAL_GPIO_ReadPin(MIN_UNID_GPIO_Port, MIN_UNID_Pin) == GPIO_PIN_SET) { incrementMinutes_units(); }
+            if (HAL_GPIO_ReadPin(MIN_DEZ_GPIO_Port, MIN_DEZ_Pin) == GPIO_PIN_SET) { incrementMinutes_tens(); }
+            if (HAL_GPIO_ReadPin(HOUR_UNID_GPIO_Port, HOUR_UNID_Pin) == GPIO_PIN_SET) { incrementHours_units(); }
+            if (HAL_GPIO_ReadPin(HOUR_DEZ_GPIO_Port, HOUR_DEZ_Pin) == GPIO_PIN_SET) { incrementHours_tens(); }
+
+            if (HAL_GPIO_ReadPin(GPIOA, CONFIRM_Pin) == GPIO_PIN_SET) {
+                confirm = 1;
+            }
+        }
+    } else if (currentMode == MODE_CONFIG_ALARM) {
+        uint8_t confirm = 0;
+
+        while (!confirm) {
+            if (HAL_GPIO_ReadPin(MIN_UNID_GPIO_Port, MIN_UNID_Pin) == GPIO_PIN_SET) { incrementAlarmMinutes_units(); }
+            if (HAL_GPIO_ReadPin(MIN_DEZ_GPIO_Port, MIN_DEZ_Pin) == GPIO_PIN_SET) { incrementAlarmMinutes_tens(); }
+            if (HAL_GPIO_ReadPin(HOUR_UNID_GPIO_Port, HOUR_UNID_Pin) == GPIO_PIN_SET) { incrementAlarmHours_units(); }
+            if (HAL_GPIO_ReadPin(HOUR_DEZ_GPIO_Port, HOUR_DEZ_Pin) == GPIO_PIN_SET) { incrementAlarmHours_tens(); }
+
+            if (HAL_GPIO_ReadPin(CONFIRM_GPIO_Port, CONFIRM_Pin) == GPIO_PIN_SET) {
+                confirm = 1;
+                saveAlarm();
+            }
+        }
     }
-  }
 
-  currentMode = MODE_RUNNING;
+    currentMode = MODE_RUNNING;
 }
+
 
 /* USER CODE END 0 */
 
@@ -230,8 +228,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-	Time currentTime = {0, 0, 0, 0, 0, 0}; // Inicializa com zero
-	ClockMode currentMode = MODE_RUNNING; // Inicializa no modo de configuração
   /* USER CODE END Init */
 
   /* Configure the system clock */
