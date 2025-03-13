@@ -1,0 +1,17 @@
+../App/app.c:15:6:setup	16	static
+../App/app.c:20:6:loop	16	static
+../App/app.c:37:6:incrementSeconds_units	8	static
+../App/app.c:42:6:incrementSeconds_tens	8	static
+../App/app.c:49:6:incrementMinutes_units	8	static
+../App/app.c:54:6:incrementMinutes_tens	8	static
+../App/app.c:61:6:incrementHours_units	8	static
+../App/app.c:69:6:incrementHours_tens	8	static
+../App/app.c:76:6:incrementAlarmMinutes_units	8	static
+../App/app.c:81:6:incrementAlarmMinutes_tens	8	static
+../App/app.c:88:6:incrementAlarmHours_units	8	static
+../App/app.c:96:6:incrementAlarmHours_tens	8	static
+../App/app.c:104:6:updateDisplay	40	static
+../App/app.c:143:6:playAlarm	16	static
+../App/app.c:155:6:readButtons	8	static
+../App/app.c:187:6:__TLC5947_SendGSData	24	static
+../App/app.c:203:6:TLC5947_SendData	24	static

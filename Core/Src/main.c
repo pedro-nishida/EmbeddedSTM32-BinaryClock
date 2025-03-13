@@ -21,39 +21,17 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "app.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef struct {
-    uint8_t seconds_units;
-    uint8_t seconds_tens;
-    uint8_t minutes_units;
-    uint8_t minutes_tens;
-    uint8_t hours_units;
-    uint8_t hours_tens;
-} TimeStruct;
 
-typedef struct {
-    uint8_t seconds_units;
-    uint8_t seconds_tens;
-    uint8_t minutes_units;
-    uint8_t minutes_tens;
-    uint8_t hours_units;
-    uint8_t hours_tens;
-} AlarmTimeStruct;
-
-typedef enum {
-    MODE_CONFIG_CLOCK,
-    MODE_CONFIG_ALARM,
-    MODE_RUNNING,
-} ConfigMode;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define Clock_Frequency 32768;
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -63,12 +41,11 @@ typedef enum {
 
 /* Private variables ---------------------------------------------------------*/
 RTC_HandleTypeDef hrtc;
+
 TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN PV */
-TimeStruct currentTime = {0, 0, 0, 0, 0, 0}; // Inicializa currentTime
-AlarmTimeStruct alarmTime = {0, 0, 0, 0, 0, 0};
-ConfigMode currentMode = MODE_RUNNING;
+
 
 /* USER CODE END PV */
 
@@ -78,135 +55,13 @@ static void MX_GPIO_Init(void);
 static void MX_RTC_Init(void);
 static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
-void incrementSeconds_units();
-void incrementSeconds_decs();
-void incrementMinutes_units();
-void incrementMinutes_decs();
-void incrementHours_units();
-void incrementHours_decs();
-void incrementAlarmMinutes_units();
-void incrementAlarmMinutes_decs();
-void incrementAlarmHours_units();
-void incrementAlarmHours_decs();
-void saveAlarm();
-void updateRelogio();
-void tocarAlarme();
-void readButtons();
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void incrementSeconds_units() {
-    currentTime.seconds_units = (currentTime.seconds_units + 1) % 10;
-}
 
-void incrementSeconds_tens() {
-    currentTime.seconds_tens = (currentTime.seconds_tens + 1) % 6;
-}
-
-void incrementMinutes_units() {
-    currentTime.minutes_units = (currentTime.minutes_units + 1) % 10;
-}
-
-void incrementMinutes_tens() {
-    currentTime.minutes_tens = (currentTime.minutes_tens + 1) % 6;
-}
-
-void incrementHours_units() {
-	if (currentTime.hours_tens == 2) {
-		currentTime.hours_units = (currentTime.hours_units + 1) % 4;  // Limite de 24 horas
-	} else {
-		currentTime.hours_units = (currentTime.hours_units + 1) % 10;
-	}
-}
-
-void incrementHours_tens() {
-    currentTime.hours_tens = (currentTime.hours_tens + 1) % 3;  // Limite de 24 horas
-}
-
-void incrementAlarmMinutes_units() {
-    alarmTime.minutes_units = (alarmTime.minutes_units + 1) % 10;
-}
-
-void incrementAlarmMinutes_tens() {
-    alarmTime.minutes_tens = (alarmTime.minutes_tens + 1) % 6;
-}
-
-void incrementAlarmHours_units() {
-    if (alarmTime.hours_tens == 2) {
-        alarmTime.hours_units = (alarmTime.hours_units + 1) % 4;  // Limite de 24 horas
-    } else {
-        alarmTime.hours_units = (alarmTime.hours_units + 1) % 10;
-    }
-}
-
-void incrementAlarmHours_tens() {
-    alarmTime.hours_tens = (alarmTime.hours_tens + 1) % 3;  // Limite de 24 horas
-}
-
-
-void saveAlarm() {
-    // Implementar a lógica para salvar o alarme
-}
-
-void updateRelogio(){
-  // Implementar a lógica para atualizar o relógio com o RTC (RUNNING MODE)
-
-  // Implementar a lógica para atualizar o relógio sem atualizar o RTC (CONFIG MODE)
-}
-
-void tocarAlarme() {
-	if (currentTime.hours_tens == alarmTime.hours_tens && currentTime.hours_units == alarmTime.hours_units &&
-	    currentTime.minutes_tens == alarmTime.minutes_tens && currentTime.minutes_units == alarmTime.minutes_units) {
-	    HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_SET);
-	    HAL_Delay(1000);  // Alarm sound duration
-	    HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_RESET);
-	}
-
-}
-
-void readButtons() {
-    uint8_t Config_Set = 0;
-
-    if (HAL_GPIO_ReadPin(GPIOA, SEL_MODE_Pin) == GPIO_PIN_SET) {
-        Config_Set = (Config_Set + 1) % 2;
-        currentMode = Config_Set ? MODE_CONFIG_ALARM : MODE_CONFIG_CLOCK;
-    }
-
-    if (currentMode == MODE_CONFIG_CLOCK) {
-        uint8_t confirm = 0;
-
-        while (!confirm) {
-            if (HAL_GPIO_ReadPin(SEC_UNID_GPIO_Port, SEC_UNID_Pin) == GPIO_PIN_SET) { incrementSeconds_units(); }
-            if (HAL_GPIO_ReadPin(SEC_DEZ_GPIO_Port, SEC_DEZ_Pin) == GPIO_PIN_SET) { incrementSeconds_tens(); }
-            if (HAL_GPIO_ReadPin(MIN_UNID_GPIO_Port, MIN_UNID_Pin) == GPIO_PIN_SET) { incrementMinutes_units(); }
-            if (HAL_GPIO_ReadPin(MIN_DEZ_GPIO_Port, MIN_DEZ_Pin) == GPIO_PIN_SET) { incrementMinutes_tens(); }
-            if (HAL_GPIO_ReadPin(HOUR_UNID_GPIO_Port, HOUR_UNID_Pin) == GPIO_PIN_SET) { incrementHours_units(); }
-            if (HAL_GPIO_ReadPin(HOUR_DEZ_GPIO_Port, HOUR_DEZ_Pin) == GPIO_PIN_SET) { incrementHours_tens(); }
-
-            if (HAL_GPIO_ReadPin(GPIOA, CONFIRM_Pin) == GPIO_PIN_SET) {
-                confirm = 1;
-            }
-        }
-    } else if (currentMode == MODE_CONFIG_ALARM) {
-        uint8_t confirm = 0;
-
-        while (!confirm) {
-            if (HAL_GPIO_ReadPin(MIN_UNID_GPIO_Port, MIN_UNID_Pin) == GPIO_PIN_SET) { incrementAlarmMinutes_units(); }
-            if (HAL_GPIO_ReadPin(MIN_DEZ_GPIO_Port, MIN_DEZ_Pin) == GPIO_PIN_SET) { incrementAlarmMinutes_tens(); }
-            if (HAL_GPIO_ReadPin(HOUR_UNID_GPIO_Port, HOUR_UNID_Pin) == GPIO_PIN_SET) { incrementAlarmHours_units(); }
-            if (HAL_GPIO_ReadPin(HOUR_DEZ_GPIO_Port, HOUR_DEZ_Pin) == GPIO_PIN_SET) { incrementAlarmHours_tens(); }
-
-            if (HAL_GPIO_ReadPin(CONFIRM_GPIO_Port, CONFIRM_Pin) == GPIO_PIN_SET) {
-                confirm = 1;
-                saveAlarm();
-            }
-        }
-    }
-
-    currentMode = MODE_RUNNING;
-}
 
 
 /* USER CODE END 0 */
@@ -242,18 +97,14 @@ int main(void)
   MX_RTC_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-
+  setup(&htim2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  readButtons();
-
-	  if (currentMode == MODE_RUNNING) {
-		  updateRelogio();
-	  }
+	  loop(&htim2);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

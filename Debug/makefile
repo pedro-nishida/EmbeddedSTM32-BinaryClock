@@ -12,6 +12,7 @@ RM := rm -rf
 -include Drivers/STM32L0xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
+-include App/subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -34,34 +35,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := relogio-binario-v2
+BUILD_ARTIFACT_NAME := relogio-binario
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-relogio-binario-v2.elf \
+relogio-binario.elf \
 
 MAP_FILES += \
-relogio-binario-v2.map \
+relogio-binario.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-relogio-binario-v2.list \
+relogio-binario.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: relogio-binario-v2.elf secondary-outputs
+main-build: relogio-binario.elf secondary-outputs
 
 # Tool invocations
-relogio-binario-v2.elf relogio-binario-v2.map: $(OBJS) $(USER_OBJS) C:\Users\phfuj\STM32CubeIDE\workspace_1.16.1\relogio-binario-v2\STM32L041K6TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "relogio-binario-v2.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0plus -T"C:\Users\phfuj\STM32CubeIDE\workspace_1.16.1\relogio-binario-v2\STM32L041K6TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="relogio-binario-v2.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+relogio-binario.elf relogio-binario.map: $(OBJS) $(USER_OBJS) /home/joaopedro/st/workspace_1.16.0/relogio-binario/STM32L041K6TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "relogio-binario.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0plus -T"/home/joaopedro/st/workspace_1.16.0/relogio-binario/STM32L041K6TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="relogio-binario.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -70,14 +71,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-relogio-binario-v2.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "relogio-binario-v2.list"
+relogio-binario.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "relogio-binario.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) default.size.stdout relogio-binario-v2.elf relogio-binario-v2.list relogio-binario-v2.map
+	-$(RM) default.size.stdout relogio-binario.elf relogio-binario.list relogio-binario.map
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)

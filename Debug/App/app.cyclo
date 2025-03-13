@@ -1,0 +1,17 @@
+../App/app.c:15:6:setup	1
+../App/app.c:20:6:loop	15
+../App/app.c:37:6:incrementSeconds_units	1
+../App/app.c:42:6:incrementSeconds_tens	1
+../App/app.c:49:6:incrementMinutes_units	1
+../App/app.c:54:6:incrementMinutes_tens	1
+../App/app.c:61:6:incrementHours_units	3
+../App/app.c:69:6:incrementHours_tens	1
+../App/app.c:76:6:incrementAlarmMinutes_units	1
+../App/app.c:81:6:incrementAlarmMinutes_tens	1
+../App/app.c:88:6:incrementAlarmHours_units	3
+../App/app.c:96:6:incrementAlarmHours_tens	1
+../App/app.c:104:6:updateDisplay	1
+../App/app.c:143:6:playAlarm	5
+../App/app.c:155:6:readButtons	15
+../App/app.c:187:6:__TLC5947_SendGSData	3
+../App/app.c:203:6:TLC5947_SendData	4
